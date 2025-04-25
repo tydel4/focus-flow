@@ -37,24 +37,24 @@ export function useTodos() {
   }, []);
 
   // Save todos to localStorage whenever they change
-  useEffect(() => {
-    const saveTodos = () => {
-      try {
-        const todosToStore = todos.map(todo => ({
-          ...todo,
-          createdAt: todo.createdAt.toISOString(),
-          dueDate: todo.dueDate ? todo.dueDate.toISOString().split('T')[0] : undefined,
-          priority: todo.priority,
-          categories: todo.categories,
-        }));
-        console.log('Saving todos to localStorage:', todosToStore);
-        localStorage.setItem('todos', JSON.stringify(todosToStore));
-      } catch (error) {
-        console.error('Error saving todos to localStorage:', error);
-      }
-    };
+  const saveTodos = (todosToSave: Todo[]) => {
+    try {
+      const todosToStore = todosToSave.map(todo => ({
+        ...todo,
+        createdAt: todo.createdAt.toISOString(),
+        dueDate: todo.dueDate ? todo.dueDate.toISOString().split('T')[0] : undefined,
+        priority: todo.priority,
+        categories: todo.categories,
+      }));
+      console.log('Saving todos to localStorage:', todosToStore);
+      localStorage.setItem('todos', JSON.stringify(todosToStore));
+    } catch (error) {
+      console.error('Error saving todos to localStorage:', error);
+    }
+  };
 
-    saveTodos();
+  useEffect(() => {
+    saveTodos(todos);
   }, [todos]);
 
   const addTodo = (text: string, dueDate?: Date) => {
