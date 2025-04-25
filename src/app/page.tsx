@@ -53,7 +53,13 @@ export default function Home() {
                 placeholder="What needs to be done?"
                 className="flex-1"
               />
-              <Button type="submit">Add</Button>
+              <Button 
+                type="submit"
+                disabled={!newTodo.trim()}
+                className={!newTodo.trim() ? 'opacity-50 cursor-not-allowed' : ''}
+              >
+                Add
+              </Button>
             </form>
           </CardContent>
         </Card>
