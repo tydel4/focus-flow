@@ -18,6 +18,13 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface TodoItemProps {
   todo: Todo;
@@ -61,6 +68,7 @@ export function TodoItem({
   const inputRef = useRef<HTMLInputElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
   const categoriesInputRef = useRef<HTMLInputElement>(null);
+  const [isEditingText, setIsEditingText] = useState(false);
 
   const {
     attributes,
@@ -103,12 +111,12 @@ export function TodoItem({
     setIsEditingCategories(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleTextSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editText.trim()) {
       onEdit(todo.id, editText.trim());
+      setIsEditingText(false);
     }
-    setIsEditing(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -151,21 +159,22 @@ export function TodoItem({
           )}
         />
         <div className="flex-1">
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="flex-1">
+          {isEditingText ? (
+            <form onSubmit={handleTextSubmit} className="flex-1">
               <Input
                 ref={inputRef}
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
-                onBlur={handleSubmit}
+                onBlur={handleTextSubmit}
                 onKeyDown={handleKeyDown}
                 className="h-8"
+                autoFocus
               />
             </form>
           ) : (
             <div>
               <span
-                onDoubleClick={handleDoubleClick}
+                onDoubleClick={() => setIsEditingText(true)}
                 className={cn(
                   'block',
                   todo.completed ? 'line-through text-muted-foreground' : ''
@@ -175,11 +184,35 @@ export function TodoItem({
               </span>
               <div className="flex items-center gap-4 mt-1">
                 {todo.dueDate && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-1">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      Due: {format(new Date(todo.dueDate), 'MMM d, yyyy')}
-                    </span>
+                    {isEditingDate ? (
+                      <form onSubmit={handleDateSubmit} className="flex gap-2">
+                        <Input
+                          type="date"
+                          value={format(new Date(todo.dueDate), 'yyyy-MM-dd')}
+                          onChange={(e) => onEditDate(todo.id, e.target.value ? new Date(e.target.value) : undefined)}
+                          className="h-8"
+                          autoFocus
+                        />
+                        <Button type="submit" size="sm">Save</Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsEditingDate(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </form>
+                    ) : (
+                      <p 
+                        className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
+                        onClick={() => setIsEditingDate(true)}
+                      >
+                        Due: {format(new Date(todo.dueDate), 'MMM d, yyyy')}
+                      </p>
+                    )}
                   </div>
                 )}
                 {todo.categories.length > 0 && (
@@ -203,6 +236,9 @@ export function TodoItem({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setIsEditingText(true)}>
+              Rename Task
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIsEditingDate(true)}>
               <Calendar className="w-4 h-4 mr-2" />
               {todo.dueDate ? 'Edit Due Date' : 'Add Due Date'}
