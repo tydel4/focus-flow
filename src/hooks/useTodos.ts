@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Todo } from '@/types/todo';
+import { Todo, Priority } from '@/types/todo';
 
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -15,6 +15,9 @@ export function useTodos() {
           const parsedTodos = JSON.parse(storedTodos).map((todo: any) => ({
             ...todo,
             createdAt: new Date(todo.createdAt),
+            dueDate: todo.dueDate ? new Date(todo.dueDate + 'T00:00:00') : undefined,
+            priority: todo.priority || 'none',
+            categories: todo.categories || [],
           }));
           console.log('Parsed todos:', parsedTodos);
           setTodos(parsedTodos);
@@ -40,6 +43,9 @@ export function useTodos() {
         const todosToStore = todos.map(todo => ({
           ...todo,
           createdAt: todo.createdAt.toISOString(),
+          dueDate: todo.dueDate ? todo.dueDate.toISOString().split('T')[0] : undefined,
+          priority: todo.priority,
+          categories: todo.categories,
         }));
         console.log('Saving todos to localStorage:', todosToStore);
         localStorage.setItem('todos', JSON.stringify(todosToStore));
@@ -51,12 +57,15 @@ export function useTodos() {
     saveTodos();
   }, [todos]);
 
-  const addTodo = (text: string) => {
+  const addTodo = (text: string, dueDate?: Date) => {
     const newTodo: Todo = {
       id: Date.now().toString(),
       text,
       completed: false,
       createdAt: new Date(),
+      dueDate: dueDate ? new Date(dueDate.toISOString().split('T')[0] + 'T00:00:00') : undefined,
+      priority: 'none',
+      categories: [],
     };
     setTodos(prevTodos => [...prevTodos, newTodo]);
   };
@@ -81,6 +90,33 @@ export function useTodos() {
     );
   };
 
+  const editDate = (id: string, newDate: Date | undefined) => {
+    setTodos(prevTodos =>
+      prevTodos.map((todo) =>
+        todo.id === id ? { 
+          ...todo, 
+          dueDate: newDate ? new Date(newDate.toISOString().split('T')[0] + 'T00:00:00') : undefined 
+        } : todo
+      )
+    );
+  };
+
+  const editPriority = (id: string, priority: Priority) => {
+    setTodos(prevTodos =>
+      prevTodos.map((todo) =>
+        todo.id === id ? { ...todo, priority } : todo
+      )
+    );
+  };
+
+  const editCategories = (id: string, categories: string[]) => {
+    setTodos(prevTodos =>
+      prevTodos.map((todo) =>
+        todo.id === id ? { ...todo, categories } : todo
+      )
+    );
+  };
+
   const reorderTodos = (activeId: string, overId: string) => {
     setTodos(prevTodos => {
       const activeIndex = prevTodos.findIndex((todo) => todo.id === activeId);
@@ -100,11 +136,14 @@ export function useTodos() {
     setTodos(prevTodos => prevTodos.filter((todo) => !todo.completed));
   };
 
-  // Sort todos: active tasks first, then completed tasks
+  // Sort todos: by priority first, then by completion status
   const sortedTodos = [...todos].sort((a, b) => {
+    // If both are completed or both are active, sort by priority
     if (a.completed === b.completed) {
-      return 0;
+      const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
     }
+    // Put completed tasks at the bottom
     return a.completed ? 1 : -1;
   });
 
@@ -114,6 +153,9 @@ export function useTodos() {
     toggleTodo,
     deleteTodo,
     editTodo,
+    editDate,
+    editPriority,
+    editCategories,
     reorderTodos,
     clearCompleted,
   };
