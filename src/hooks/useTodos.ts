@@ -82,12 +82,21 @@ export function useTodos() {
     setTodos(prevTodos => prevTodos.filter((todo) => todo.id !== id));
   };
 
-  const editTodo = (id: string, newText: string) => {
-    setTodos(prevTodos =>
-      prevTodos.map((todo) =>
-        todo.id === id ? { ...todo, text: newText } : todo
-      )
-    );
+  const editTodo = (id: string, text: string | Partial<Todo>) => {
+    setTodos(prevTodos => {
+      const newTodos = prevTodos.map(todo => {
+        if (todo.id === id) {
+          if (typeof text === 'string') {
+            return { ...todo, text };
+          } else {
+            return { ...todo, ...text };
+          }
+        }
+        return todo;
+      });
+      saveTodos(newTodos);
+      return newTodos;
+    });
   };
 
   const editDate = (id: string, newDate: Date | undefined) => {
