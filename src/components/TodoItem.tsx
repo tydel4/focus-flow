@@ -4,7 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, GripVertical, Calendar, MoreVertical, Tag, Flag } from 'lucide-react';
+import { Trash2, GripVertical, Calendar, MoreVertical, Tag, Flag, Pencil } from 'lucide-react';
 import { Todo, Priority } from '@/types/todo';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -161,27 +161,27 @@ export function TodoItem({
         <div className="flex-1">
           {isEditingText ? (
             <form onSubmit={handleTextSubmit} className="flex-1">
-              <Input
-                ref={inputRef}
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
+            <Input
+              ref={inputRef}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
                 onBlur={handleTextSubmit}
-                onKeyDown={handleKeyDown}
-                className="h-8"
+              onKeyDown={handleKeyDown}
+              className="h-8"
                 autoFocus
-              />
-            </form>
-          ) : (
+            />
+          </form>
+        ) : (
             <div>
-              <span
-                onDoubleClick={() => setIsEditingText(true)}
-                className={cn(
-                  'block',
-                  todo.completed ? 'line-through text-muted-foreground' : ''
-                )}
-              >
-                {todo.text}
-              </span>
+          <span
+            onDoubleClick={() => setIsEditingText(true)}
+            className={cn(
+              'block break-all whitespace-normal',
+              todo.completed ? 'line-through text-muted-foreground' : ''
+            )}
+          >
+            {todo.text}
+          </span>
               <div className="flex items-center gap-4 mt-1">
                 {todo.dueDate && (
                   <div className="flex items-center gap-2 mt-1">
@@ -237,6 +237,7 @@ export function TodoItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setIsEditingText(true)}>
+              <Pencil className="w-4 h-4 mr-2" />
               Rename Task
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIsEditingDate(true)}>
@@ -278,13 +279,13 @@ export function TodoItem({
             </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(todo.id)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onDelete(todo.id)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
       </div>
 
       {/* Date Input Modal */}

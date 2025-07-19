@@ -124,7 +124,7 @@ export default function Home() {
     <main className="min-h-screen p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold font-poppins text-blue-500">
+          <h1 className="text-4xl font-bold font-poppins text-foreground">
             Focus Flow
           </h1>
           <div className="flex items-center gap-2">
@@ -147,6 +147,25 @@ export default function Home() {
                   placeholder="What needs to be done?"
                   className="flex-1"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10"
+                  onClick={() => {
+                    const dateInput = document.getElementById('dueDate');
+                    if (dateInput) dateInput.click();
+                  }}
+                >
+                  <Calendar className="h-4 w-4" />
+                </Button>
+                <input
+                  id="dueDate"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="hidden"
+                />
                 <Button 
                   type="submit"
                   disabled={!newTodo.trim()}
@@ -154,15 +173,6 @@ export default function Home() {
                 >
                   Add
                 </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="max-w-[200px]"
-                />
               </div>
             </form>
           </CardContent>
