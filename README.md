@@ -29,7 +29,7 @@ A modern, feature-rich task management application built with Next.js and TypeSc
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/focus-flow.git
+   git clone https://github.com/tydel4/focus-flow
    cd focus-flow
    ```
 
@@ -169,6 +169,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by [Your Name]**
+**Made with ❤️**
 
 Feel free to star this repository if you find it helpful! 
