@@ -57,18 +57,18 @@ export function useTodos() {
   const addTodo = (text: string, dueDate?: Date) => {
     const newTodo: Todo = {
       id: generateId(),
-      text,
+          text,
       completed: false,
       createdAt: new Date(),
-      dueDate,
-      priority: 'none',
-      categories: [],
+          dueDate,
+          priority: 'none',
+          categories: [],
     };
-    setTodos((prev) => [newTodo, ...prev]);
+      setTodos((prev) => [newTodo, ...prev]);
   };
 
   const toggleTodo = (id: string) => {
-    setTodos((prev) =>
+      setTodos((prev) =>
       prev.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
       )
@@ -88,7 +88,7 @@ export function useTodos() {
   };
 
   const editDate = (id: string, date: Date | undefined) => {
-    setTodos((prev) =>
+      setTodos((prev) =>
       prev.map((todo) =>
         todo.id === id ? { ...todo, dueDate: date } : todo
       )
@@ -96,7 +96,7 @@ export function useTodos() {
   };
 
   const editPriority = (id: string, priority: Priority) => {
-    setTodos((prev) =>
+      setTodos((prev) =>
       prev.map((todo) =>
         todo.id === id ? { ...todo, priority } : todo
       )
@@ -104,7 +104,7 @@ export function useTodos() {
   };
 
   const editCategories = (id: string, categories: string[]) => {
-    setTodos((prev) =>
+      setTodos((prev) =>
       prev.map((todo) =>
         todo.id === id ? { ...todo, categories } : todo
       )
@@ -112,7 +112,7 @@ export function useTodos() {
   };
 
   const updateNotificationStatus = (id: string, notificationSent: boolean) => {
-    setTodos((prev) =>
+      setTodos((prev) =>
       prev.map((todo) =>
         todo.id === id ? { ...todo, notificationSent } : todo
       )

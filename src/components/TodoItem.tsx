@@ -59,16 +59,17 @@ export function TodoItem({
   onEditPriority,
   onEditCategories 
 }: TodoItemProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingText, setIsEditingText] = useState(false);
   const [isEditingDate, setIsEditingDate] = useState(false);
   const [isEditingCategories, setIsEditingCategories] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [editDate, setEditDate] = useState(todo.dueDate ? format(todo.dueDate, 'yyyy-MM-dd') : '');
   const [editCategories, setEditCategories] = useState(todo.categories.join(', '));
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
   const categoriesInputRef = useRef<HTMLInputElement>(null);
-  const [isEditingText, setIsEditingText] = useState(false);
+  const dropdownTriggerRef = useRef<HTMLButtonElement>(null);
 
   const {
     attributes,
@@ -80,7 +81,7 @@ export function TodoItem({
   } = useSortable({ id: todo.id });
 
   useEffect(() => {
-    if (isEditing && inputRef.current) {
+    if (isEditingText && inputRef.current) {
       inputRef.current.focus();
     }
     if (isEditingDate && dateInputRef.current) {
@@ -89,10 +90,10 @@ export function TodoItem({
     if (isEditingCategories && categoriesInputRef.current) {
       categoriesInputRef.current.focus();
     }
-  }, [isEditing, isEditingDate, isEditingCategories]);
+  }, [isEditingText, isEditingDate, isEditingCategories]);
 
   const handleDoubleClick = () => {
-    setIsEditing(true);
+    setIsEditingText(true);
   };
 
   const handleDateSubmit = (e: React.FormEvent) => {
@@ -119,12 +120,34 @@ export function TodoItem({
     }
   };
 
+  const handleRenameClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Close dropdown and prevent focus
+    setDropdownOpen(false);
+    if (dropdownTriggerRef.current) {
+      dropdownTriggerRef.current.blur();
+    }
+    
+    // Immediately set edit mode
+    setIsEditingText(true);
+    
+    // Focus the input after a brief moment
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
+    });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       setEditText(todo.text);
       setEditDate(todo.dueDate ? format(todo.dueDate, 'yyyy-MM-dd') : '');
       setEditCategories(todo.categories.join(', '));
-      setIsEditing(false);
+      setIsEditingText(false);
       setIsEditingDate(false);
       setIsEditingCategories(false);
     }
@@ -159,84 +182,80 @@ export function TodoItem({
           )}
         />
         <div className="flex-1">
-          {isEditingText ? (
-            <form onSubmit={handleTextSubmit} className="flex-1">
-            <Input
-              ref={inputRef}
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-                onBlur={handleTextSubmit}
-              onKeyDown={handleKeyDown}
-              className="h-8"
-                autoFocus
-            />
-          </form>
-        ) : (
-            <div>
-          <span
-            onDoubleClick={() => setIsEditingText(true)}
-            className={cn(
-              'block break-all whitespace-normal',
-              todo.completed ? 'line-through text-muted-foreground' : ''
-            )}
-          >
-            {todo.text}
-          </span>
-              <div className="flex items-center gap-4 mt-1">
-                {todo.dueDate && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    {isEditingDate ? (
-                      <form onSubmit={handleDateSubmit} className="flex gap-2">
-                        <Input
-                          type="date"
-                          value={format(new Date(todo.dueDate), 'yyyy-MM-dd')}
-                          onChange={(e) => onEditDate(todo.id, e.target.value ? new Date(e.target.value) : undefined)}
-                          className="h-8"
-                          autoFocus
-                        />
-                        <Button type="submit" size="sm">Save</Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsEditingDate(false)}
-                        >
-                          Cancel
-                        </Button>
-                      </form>
-                    ) : (
-                      <p 
-                        className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
-                        onClick={() => setIsEditingDate(true)}
+          <div>
+            <span
+              onDoubleClick={() => setIsEditingText(true)}
+              className={cn(
+                'block break-all whitespace-normal',
+                todo.completed ? 'line-through text-muted-foreground' : ''
+              )}
+            >
+              {todo.text}
+            </span>
+            <div className="flex items-center gap-4 mt-1">
+              {todo.dueDate && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  {isEditingDate ? (
+                    <form onSubmit={handleDateSubmit} className="flex gap-2">
+                      <Input
+                        type="date"
+                        value={format(new Date(todo.dueDate), 'yyyy-MM-dd')}
+                        onChange={(e) => onEditDate(todo.id, e.target.value ? new Date(e.target.value) : undefined)}
+                        className="h-8"
+                        autoFocus
+                      />
+                      <Button type="submit" size="sm">Save</Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditingDate(false)}
                       >
-                        Due: {format(new Date(todo.dueDate), 'MMM d, yyyy')}
-                      </p>
-                    )}
-                  </div>
-                )}
-                {todo.categories.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {todo.categories.join(', ')}
-                    </span>
-                  </div>
-                )}
-              </div>
+                        Cancel
+                      </Button>
+                    </form>
+                  ) : (
+                    <p 
+                      className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
+                      onClick={() => setIsEditingDate(true)}
+                    >
+                      Due: {format(new Date(todo.dueDate), 'MMM d, yyyy')}
+                    </p>
+                  )}
+                </div>
+              )}
+              {todo.categories.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {todo.categories.join(', ')}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <DropdownMenu>
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button 
+              ref={dropdownTriggerRef}
+              variant="ghost" 
+              size="icon"
+              tabIndex={dropdownOpen ? 0 : -1}
+              onFocus={(e) => {
+                if (!dropdownOpen) {
+                  e.target.blur();
+                }
+              }}
+            >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setIsEditingText(true)}>
+            <DropdownMenuItem onClick={handleRenameClick}>
               <Pencil className="w-4 h-4 mr-2" />
               Rename Task
             </DropdownMenuItem>
@@ -338,6 +357,38 @@ export function TodoItem({
                   type="button"
                   variant="outline"
                   onClick={() => setIsEditingCategories(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Save</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Text Edit Modal */}
+      {isEditingText && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-4 rounded-lg shadow-lg w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Edit Task</h3>
+            <form onSubmit={handleTextSubmit} className="flex flex-col gap-4">
+              <Input
+                ref={inputRef}
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="h-10"
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditingText(false);
+                    setEditText(todo.text);
+                  }}
                 >
                   Cancel
                 </Button>

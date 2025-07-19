@@ -30,6 +30,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [newTodo, setNewTodo] = useState('');
   const [dueDate, setDueDate] = useState<string>('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [statusFilter, setStatusFilter] = useState<FilterType>('all');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
   const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>('all');
@@ -52,6 +53,20 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showDatePicker && !target.closest('.date-picker-container')) {
+        setShowDatePicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDatePicker]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +152,7 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="flex gap-2">
+              <div className="flex gap-2 relative">
                 <Input
                   type="text"
                   value={newTodo}
@@ -149,21 +164,25 @@ export default function Home() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-10 w-10"
-                  onClick={() => {
-                    const dateInput = document.getElementById('dueDate');
-                    if (dateInput) dateInput.click();
-                  }}
+                  className="h-10 w-10 date-picker-container"
+                  onClick={() => setShowDatePicker(!showDatePicker)}
                 >
                   <Calendar className="h-4 w-4" />
                 </Button>
-                <input
-                  id="dueDate"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="hidden"
-                />
+                {showDatePicker && (
+                  <div className="absolute top-full left-0 mt-1 z-10 bg-background border rounded-md shadow-lg p-2 date-picker-container">
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => {
+                        setDueDate(e.target.value);
+                        setShowDatePicker(false);
+                      }}
+                      className="w-full p-2 border rounded"
+                      autoFocus
+                    />
+                  </div>
+                )}
                 <Button 
                   type="submit"
                   disabled={!newTodo.trim()}
