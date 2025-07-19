@@ -44,6 +44,7 @@ export default function Home() {
     editDate, 
     editPriority,
     editCategories,
+    updateNotificationStatus,
     reorderTodos, 
     clearCompleted 
   } = useTodos();
@@ -110,10 +111,7 @@ export default function Home() {
 
   const handleClearNotification = (id: string) => {
     const todoId = id.split('-')[1];
-    const todo = todos.find(t => t.id === todoId);
-    if (todo) {
-      editTodo(todo.id, { ...todo, notificationSent: true });
-    }
+    updateNotificationStatus(todoId, true);
   };
 
   if (!mounted) {

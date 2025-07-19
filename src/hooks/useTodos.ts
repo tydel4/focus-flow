@@ -1,196 +1,141 @@
 import { useState, useEffect } from 'react';
 import { Todo, Priority } from '@/types/todo';
 
+const STORAGE_KEY = 'focus-flow-todos';
+
+// Helper function to generate unique IDs
+const generateId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+// Helper function to save todos to localStorage
+const saveTodosToStorage = (todos: Todo[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  } catch (error) {
+    console.error('Failed to save todos to localStorage:', error);
+  }
+};
+
+// Helper function to load todos from localStorage
+const loadTodosFromStorage = (): Todo[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const todos = JSON.parse(stored);
+      // Convert date strings back to Date objects
+      return todos.map((todo: any) => ({
+        ...todo,
+        createdAt: new Date(todo.createdAt),
+        dueDate: todo.dueDate ? new Date(todo.dueDate) : undefined,
+      }));
+    }
+  } catch (error) {
+    console.error('Failed to load todos from localStorage:', error);
+  }
+  return [];
+};
+
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTodos();
+    // Load todos from localStorage on mount
+    const storedTodos = loadTodosFromStorage();
+    setTodos(storedTodos);
+    setLoading(false);
   }, []);
 
-  const fetchTodos = async () => {
-    try {
-      const response = await fetch('/api/todos');
-      const data = await response.json();
-      setTodos(data);
-    } catch (error) {
-      console.error('Failed to fetch todos:', error);
-    } finally {
-      setLoading(false);
+  // Save todos to localStorage whenever they change
+  useEffect(() => {
+    if (!loading) {
+      saveTodosToStorage(todos);
     }
+  }, [todos, loading]);
+
+  const addTodo = (text: string, dueDate?: Date) => {
+    const newTodo: Todo = {
+      id: generateId(),
+      text,
+      completed: false,
+      createdAt: new Date(),
+      dueDate,
+      priority: 'none',
+      categories: [],
+    };
+    setTodos((prev) => [newTodo, ...prev]);
   };
 
-  const addTodo = async (text: string, dueDate?: Date) => {
-    try {
-      const response = await fetch('/api/todos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text,
-          dueDate,
-          priority: 'none',
-          categories: [],
-        }),
-      });
-      const newTodo = await response.json();
-      setTodos((prev) => [newTodo, ...prev]);
-    } catch (error) {
-      console.error('Failed to add todo:', error);
-    }
+  const toggleTodo = (id: string) => {
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
   };
 
-  const toggleTodo = async (id: string) => {
-    try {
-      const todo = todos.find((t) => t.id === id);
-      if (!todo) return;
-
-      const response = await fetch(`/api/todos/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...todo,
-          completed: !todo.completed,
-        }),
-      });
-      const updatedTodo = await response.json();
-      setTodos((prev) =>
-        prev.map((t) => (t.id === id ? updatedTodo : t))
-      );
-    } catch (error) {
-      console.error('Failed to toggle todo:', error);
-    }
+  const deleteTodo = (id: string) => {
+    setTodos((prev) => prev.filter((todo) => todo.id !== id));
   };
 
-  const deleteTodo = async (id: string) => {
-    try {
-      await fetch(`/api/todos/${id}`, {
-        method: 'DELETE',
-      });
-      setTodos((prev) => prev.filter((t) => t.id !== id));
-    } catch (error) {
-      console.error('Failed to delete todo:', error);
-    }
+  const editTodo = (id: string, text: string) => {
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id ? { ...todo, text } : todo
+      )
+    );
   };
 
-  const editTodo = async (id: string, text: string) => {
-    try {
-      const todo = todos.find((t) => t.id === id);
-      if (!todo) return;
-
-      const response = await fetch(`/api/todos/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...todo,
-          text,
-        }),
-      });
-      const updatedTodo = await response.json();
-      setTodos((prev) =>
-        prev.map((t) => (t.id === id ? updatedTodo : t))
-      );
-    } catch (error) {
-      console.error('Failed to edit todo:', error);
-    }
+  const editDate = (id: string, date: Date | undefined) => {
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id ? { ...todo, dueDate: date } : todo
+      )
+    );
   };
 
-  const editDate = async (id: string, date: Date | undefined) => {
-    try {
-      const todo = todos.find((t) => t.id === id);
-      if (!todo) return;
-
-      const response = await fetch(`/api/todos/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...todo,
-          dueDate: date,
-        }),
-      });
-      const updatedTodo = await response.json();
-      setTodos((prev) =>
-        prev.map((t) => (t.id === id ? updatedTodo : t))
-      );
-    } catch (error) {
-      console.error('Failed to edit date:', error);
-    }
+  const editPriority = (id: string, priority: Priority) => {
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id ? { ...todo, priority } : todo
+      )
+    );
   };
 
-  const editPriority = async (id: string, priority: Priority) => {
-    try {
-      const todo = todos.find((t) => t.id === id);
-      if (!todo) return;
-
-      const response = await fetch(`/api/todos/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...todo,
-          priority,
-        }),
-      });
-      const updatedTodo = await response.json();
-      setTodos((prev) =>
-        prev.map((t) => (t.id === id ? updatedTodo : t))
-      );
-    } catch (error) {
-      console.error('Failed to edit priority:', error);
-    }
+  const editCategories = (id: string, categories: string[]) => {
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id ? { ...todo, categories } : todo
+      )
+    );
   };
 
-  const editCategories = async (id: string, categories: string[]) => {
-    try {
-      const todo = todos.find((t) => t.id === id);
-      if (!todo) return;
-
-      const response = await fetch(`/api/todos/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...todo,
-          categories,
-        }),
-      });
-      const updatedTodo = await response.json();
-      setTodos((prev) =>
-        prev.map((t) => (t.id === id ? updatedTodo : t))
-      );
-    } catch (error) {
-      console.error('Failed to edit categories:', error);
-    }
+  const updateNotificationStatus = (id: string, notificationSent: boolean) => {
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id ? { ...todo, notificationSent } : todo
+      )
+    );
   };
 
-  const clearCompleted = async () => {
-    try {
-      const completedIds = todos
-        .filter((t) => t.completed)
-        .map((t) => t.id);
+  const clearCompleted = () => {
+    setTodos((prev) => prev.filter((todo) => !todo.completed));
+  };
+
+  const reorderTodos = (activeId: string, overId: string) => {
+    setTodos((prev) => {
+      const activeIndex = prev.findIndex((todo) => todo.id === activeId);
+      const overIndex = prev.findIndex((todo) => todo.id === overId);
       
-      await Promise.all(
-        completedIds.map((id) =>
-          fetch(`/api/todos/${id}`, {
-            method: 'DELETE',
-          })
-        )
-      );
+      if (activeIndex === -1 || overIndex === -1) return prev;
       
-      setTodos((prev) => prev.filter((t) => !t.completed));
-    } catch (error) {
-      console.error('Failed to clear completed:', error);
-    }
+      const newTodos = [...prev];
+      const [movedTodo] = newTodos.splice(activeIndex, 1);
+      newTodos.splice(overIndex, 0, movedTodo);
+      
+      return newTodos;
+    });
   };
 
   return {
@@ -203,6 +148,8 @@ export function useTodos() {
     editDate,
     editPriority,
     editCategories,
+    updateNotificationStatus,
+    reorderTodos,
     clearCompleted,
   };
 } 
